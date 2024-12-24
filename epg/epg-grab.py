@@ -10,7 +10,6 @@ EPG_FILES_DIR = ''
 
 INDENT = '  '
 SEPARATOR = 80 * '-'
-SEPARATOR2 = 80 * '='
 
 # ------------------------------------------------------------------------------
 # command line arguments
@@ -76,9 +75,10 @@ acquire_again = True
 #
 def start_tuner() :
                                                                # execute command
+    channel_with_spaces = channel.replace('_', ' ')
     os.system(
-        "dvbv5-zap -c %s -r %s >%s 2>&1 &" %
-            (channels_list_file_spec, channel, log_file_spec)
+        "dvbv5-zap -c %s -r \"%s\" >%s 2>&1 &" %
+            (channels_list_file_spec, channel_with_spaces, log_file_spec)
     )
 
 #-------------------------------------------------------------------------------
@@ -106,7 +106,6 @@ def demultiplex_program_guides() :
     epg_xml = epg_file.read()
     epg_file.close()
     epg_dict = xmltodict.parse(epg_xml)
-#    print(epg_dict)
                                                                  # find channels
     channels_list_file = open(channels_list_file_spec, 'r')
     channel_ids = {}
@@ -160,8 +159,6 @@ def demultiplex_program_guides() :
         channel_epg_file.write(programme_xml)
         channel_epg_file.write("\n")
         channel_epg_file.close()
-#    print(programme_xml)
-        
 
 # ==============================================================================
 # main script
