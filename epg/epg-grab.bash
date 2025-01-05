@@ -11,7 +11,7 @@ start=`date +%s`
 for channel in ${CHANNELS_TO_SCAN[@]}; do
   channel_no_underscore=`echo $channel | tr _ ' '`
   echo "$INDENT$channel_no_underscore"
-  $SCRIPT_DIR/epg-grab.py $channel
+  $SCRIPT_DIR/epg-grab.py $channel -l /dev/null
 done
 end=`date +%s`
 echo "done in $(((end-start)/60)) minutes"

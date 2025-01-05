@@ -89,6 +89,7 @@ def grab_EPG() :
     os.system(
         "epgrab -i %s >%s 2>%s" % (tuner_demux, epg_file_spec, log_file_spec)
     )
+    os.chmod(epg_file_spec, 0o666)
 
 #-------------------------------------------------------------------------------
 # Stop DVB tuner
