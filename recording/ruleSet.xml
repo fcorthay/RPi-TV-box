@@ -1,0 +1,12 @@
+<ruleSet>
+  <rule>
+    <title is="Invitation au voyage"/>
+  </rule>
+  <rule>
+    <channel name="Arte"/>
+    <title contains="journal"/>
+  </rule>
+  <rule>
+    <title is="Découvertes"/>
+  </rule>
+</ruleSet>
