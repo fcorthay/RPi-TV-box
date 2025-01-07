@@ -11,5 +11,5 @@ export CHANNELS_TO_SCAN=(
   'Arte' 'Planete_Plus' '8_Mont_Blanc'
   'RTS_1' 'TF1'
   'TMC'
+  '3_Sat'
 )
-#export CHANNELS_TO_SCAN=('')

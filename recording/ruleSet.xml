@@ -7,6 +7,6 @@
     <title contains="journal"/>
   </rule>
   <rule>
-    <title is="Découvertes"/>
+    <title is="nano"/>
   </rule>
 </ruleSet>

@@ -21,15 +21,15 @@ parser.add_argument(
     'rules', default='ruleSet.xml', nargs='?',
     help = 'rules file'
 )
-                                                       # recording schedule file
-parser.add_argument(
-    '-l', '--schedule', default='schedule.xml',
-    help = 'the recordings schedule file'
-)
                                                            # epg files directory
 parser.add_argument(
     '-d', '--dir', default='/home/control/Public/www',
     help = 'the DVB channels list file'
+)
+                                                       # recording schedule file
+parser.add_argument(
+    '-l', '--schedule', default='schedule.xml',
+    help = 'the recordings schedule file'
 )
                                                                      # verbosity
 parser.add_argument(
@@ -40,11 +40,11 @@ parser.add_argument(
 script_dir = os.path.dirname(os.path.realpath(__file__))
 parser_arguments = parser.parse_args()
 rules_file_spec = os.sep.join([script_dir, parser_arguments.rules])
-schedule_file_spec = parser_arguments.schedule
 epg_files_directory = parser_arguments.dir
+schedule_file_spec = parser_arguments.schedule
+if os.sep not in schedule_file_spec:
+    schedule_file_spec = os.sep.join([epg_files_directory, schedule_file_spec])
 verbose = parser_arguments.verbose
-
-acquire_again = True
 
 # ==============================================================================
 # Internal functions
@@ -59,8 +59,14 @@ def to_datetime(time_string) :
 #-------------------------------------------------------------------------------
 # datetime object to hh:mm:ss
 #
-def to_time(datetime_object) :
+def to_string(datetime_object) :
     return(datetime.datetime.strftime(datetime_object, '%Hh%M'))
+
+#-------------------------------------------------------------------------------
+# datetime object to hh:mm:ss
+#
+def to_string_long(datetime_object) :
+    return(datetime.datetime.strftime(datetime_object, '%Y%m%d%H%M%S %z'))
 
 #-------------------------------------------------------------------------------
 # Check if a rule matches
@@ -149,23 +155,32 @@ def build_schedule(programmes) :
                                                     # check if time slot is free
         time_slot_is_free = True
         for occupied in schedule :
-            if (start < occupied['stop']) and (stop > occupied['start']) :
+            occupied_start = occupied['start']
+            occupied_stop = occupied['stop']
+                                                        # starts within occupied
+            if (start > occupied_start) and (start < occupied_stop) :
+                time_slot_is_free = False
+                                                          # ends within occupied
+            if (stop > occupied_start) and (stop < occupied_stop) :
+                time_slot_is_free = False
+                                                          # ranges over occupied
+            if (start < occupied_start) and (stop > occupied_stop) :
                 time_slot_is_free = False
         if time_slot_is_free :
             if verbose :
                 print(INDENT + "%s - %s : %s" %
-                    (to_time(start), to_time(stop), title)
+                    (to_string(start), to_string(stop), title)
                 )
             schedule.append({
                 'start' : start,
                 'stop' : stop,
-                'channel' : channel,
+                'channel' : channel.replace('_', ' '),
                 'title' : title
             })
         else :
             if verbose :
                 print(2*INDENT + "slot %s - %s for \"%s\" is occupied" %
-                    (to_time(start), to_time(stop), title)
+                    (to_string(start), to_string(stop), title)
                 )
                                                             # sort by start time
     sorting_dict = {}
@@ -191,13 +206,29 @@ if verbose :
 to_record = build_programme_list()
                                                                 # build schedule
 schedule = build_schedule(to_record)
+                                                                 # write to file
 if verbose :
     print()
     print('Schedule:')
-    for recording in schedule :
+recording_list = []
+for recording in schedule :
+    if verbose :
         print(INDENT + "%s - %s : %s, %s" % (
-            to_time(recording['start']),
-            to_time(recording['stop']),
+            to_string(recording['start']),
+            to_string(recording['stop']),
             recording['channel'],
-            recording['title'])
-        )
+            recording['title']
+        ))
+    recording_list.append({
+        'start' : to_string_long(recording['start']),
+        'stop' : to_string_long(recording['stop']),
+        'channel' : recording['channel'],
+        'title' : recording['title']
+    })
+schedule_file = open(schedule_file_spec, 'w')
+schedule_file.write(xmltodict.unparse(
+    {'schedule' : {'recording' : recording_list}},
+    pretty=True
+))
+schedule_file.write("\n")
+schedule_file.close()
