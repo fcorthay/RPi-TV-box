@@ -6,7 +6,4 @@
     <channel name="Arte"/>
     <title contains="journal"/>
   </rule>
-  <rule>
-    <title is="nano"/>
-  </rule>
 </ruleSet>

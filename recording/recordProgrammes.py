@@ -125,13 +125,20 @@ def next_recording(schedule) :
 
     next_recording_start = datetime.datetime.now() + datetime.timedelta(days=10)
     next_recording_start = next_recording_start.replace(tzinfo=pytz.UTC)
-    for recording in schedule :
-        start = to_datetime(recording['start'])
-        if start < next_recording_start :
-            next_recording_start = start
-            next_recording_stop = to_datetime(recording['stop'])
-            next_recording_channel = recording['channel']
-            next_recording_title = recording['title']
+    if isinstance(schedule, list) :
+        for recording in schedule :
+            print(recording)
+            start = to_datetime(recording['start'])
+            if start < next_recording_start :
+                next_recording_start = start
+                next_recording_stop = to_datetime(recording['stop'])
+                next_recording_channel = recording['channel']
+                next_recording_title = recording['title']
+    else :  # last element of list is only the dict
+        next_recording_start = to_datetime(schedule['stop'])
+        next_recording_stop = to_datetime(schedule['stop'])
+        next_recording_channel = schedule['channel']
+        next_recording_title = schedule['title']
 
     return(
         next_recording_start, next_recording_stop,
@@ -231,14 +238,23 @@ while not recording_end :
         seconds_to_wait = (next_start - now).total_seconds()
                                                        # remove overrun schedule
         if seconds_to_wait < -OVERRUN_MARGIN :
-            print("removing overrun schedule at %s" % (to_string(next_start)))
-            schedule_dict['schedule']['recording'] = [
-                element for element in schedule_dict['schedule']['recording']
-                    if not (element['start'] == to_string_long(next_start))
-            ]
-            schedule_file = open(schedule_file_spec, 'w')
-            schedule_file.write(xmltodict.unparse(schedule_dict, pretty=True))
-            schedule_file.close()
+            if isinstance(schedule_dict, list) :
+                if verbose :
+                    print(
+                        "removing overrun schedule at %s" %
+                            (to_string(next_start))
+                    )
+                schedule_dict['schedule']['recording'] = [
+                    element for element in schedule_dict['schedule']['recording']
+                        if not (element['start'] == to_string_long(next_start))
+                ]
+                schedule_file = open(schedule_file_spec, 'w')
+                schedule_file.write(xmltodict.unparse(schedule_dict, pretty=True))
+                schedule_file.close()
+            else :
+                if verbose :
+                    print('end of recodings list')
+                recording_end = True
                                                                  # check if done
         elif seconds_to_wait <= sampling_period :
             state = 'starting_recording'
