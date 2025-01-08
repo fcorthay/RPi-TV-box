@@ -13,3 +13,6 @@ export CHANNELS_TO_SCAN=(
   'TMC'
   '3_Sat'
 )
+
+# Recordings
+export RECORD_DIR='/media/storage/recordings'

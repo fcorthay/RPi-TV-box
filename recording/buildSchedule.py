@@ -7,8 +7,6 @@ import datetime
 # ------------------------------------------------------------------------------
 # constants
 #
-EPG_FILES_DIR = ''
-
 INDENT = '  '
 SEPARATOR = 80 * '-'
 
@@ -24,7 +22,7 @@ parser.add_argument(
                                                            # epg files directory
 parser.add_argument(
     '-d', '--dir', default='/home/control/Public/www',
-    help = 'the DVB channels list file'
+    help = 'the EPG files directory'
 )
                                                        # recording schedule file
 parser.add_argument(
