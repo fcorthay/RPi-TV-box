@@ -127,7 +127,6 @@ def next_recording(schedule) :
     next_recording_start = next_recording_start.replace(tzinfo=pytz.UTC)
     if isinstance(schedule, list) :
         for recording in schedule :
-            print(recording)
             start = to_datetime(recording['start'])
             if start < next_recording_start :
                 next_recording_start = start
@@ -229,23 +228,24 @@ while not recording_end :
     schedule_dict = xmltodict.parse(schedule_xml)
                                                     # waiting for next recording
     if state == 'waiting' :
+        recording_list = schedule_dict['schedule']['recording']
                                                      # find next recording start
         (next_start, next_stop, channel, title) = next_recording(
-            schedule_dict['schedule']['recording']
+            recording_list
         )
         next_event = next_start
         now = datetime.datetime.now(datetime.timezone.utc)
         seconds_to_wait = (next_start - now).total_seconds()
                                                        # remove overrun schedule
         if seconds_to_wait < -OVERRUN_MARGIN :
-            if isinstance(schedule_dict, list) :
+            if isinstance(recording_list, list) :
                 if verbose :
                     print(
                         "removing overrun schedule at %s" %
                             (to_string(next_start))
                     )
                 schedule_dict['schedule']['recording'] = [
-                    element for element in schedule_dict['schedule']['recording']
+                    element for element in recording_list
                         if not (element['start'] == to_string_long(next_start))
                 ]
                 schedule_file = open(schedule_file_spec, 'w')

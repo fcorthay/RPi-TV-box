@@ -6,4 +6,13 @@
     <channel name="Arte"/>
     <title contains="journal"/>
   </rule>
+  <rule>
+    <title is="Le dessous des images"/>
+  </rule>
+  <rule>
+    <title is="nano"/>
+  </rule>
+  <rule>
+    <title is="L'Europe des merveilles"/>
+  </rule>
 </ruleSet>
