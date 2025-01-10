@@ -77,6 +77,7 @@ tuner_adapter = int(parser_arguments.adapter)
 sampling_period = float(parser_arguments.period)
 verbose = parser_arguments.verbose
 
+build_new_timestamp = False
 
 # ==============================================================================
 # Internal functions
@@ -99,6 +100,34 @@ def to_string(datetime_object) :
 #
 def to_string_long(datetime_object) :
     return(datetime.datetime.strftime(datetime_object, '%Y%m%d%H%M%S %z'))
+
+#-------------------------------------------------------------------------------
+# timestamp for files
+#
+def time_stamp() :
+    return(to_string_long(datetime.datetime.now()).replace(' ', ''))
+
+#-------------------------------------------------------------------------------
+# remove old recordings
+#
+def purge_old_recordings() :
+    seconds_per_day = 60*60*24
+    if verbose :
+        print('Purging old recordings')
+                                                 # loop through recordings files
+    file_name_start = recording_file_spec.split(os.sep)[-1]
+    file_name_start = file_name_start.split('.')[0]
+    recordings_directory = os.sep.join(recording_file_spec.split(os.sep)[:-1])
+    current_time = time.time()
+    for file_name in os.listdir(recordings_directory) :
+        file_spec = os.sep.join([recordings_directory, file_name])
+        if os.path.isfile(file_spec) :
+            if file_name.startswith(file_name_start) :
+                file_time = os.stat(file_spec).st_mtime
+                if file_time < current_time - seconds_per_day :
+                    if verbose :
+                        print(INDENT + file_name)
+                    os.remove(file_spec)
 
 #-------------------------------------------------------------------------------
 # check if command is running
@@ -149,11 +178,10 @@ def next_recording(schedule) :
 #
 def start_recording(channel, duration) :
                                                     # add timestamp to file spec
-    timestamp = '-' + to_string_long(datetime.datetime.now()).replace(' ', '')
     file_parts = recording_file_spec.split('.')
-    file_extension = '.' + file_parts[-1]
     file_name = '.'.join(file_parts[:-1])
-    output_file_spec = file_name + timestamp + file_extension
+    file_extension = file_parts[-1]
+    output_file_spec = "%s-%s.%s" % (file_name, time_stamp(), file_extension)
     if verbose :
         print(INDENT + output_file_spec)
                                                               # launch recording
@@ -172,9 +200,14 @@ def start_recording(channel, duration) :
 #
 def end_recording(recorded_file_spec, title) :
                                                                # build_file spec
-    timestamp = '-' + to_string_long(datetime.datetime.now()).replace(' ', '')
+    if build_new_timestamp :
+        timestamp = time_stamp()
+    else :
+        timestamp = recorded_file_spec.split(os.sep)[-1]
+        timestamp = timestamp.split('-')[-1]
+        timestamp = timestamp.split('.')[0]
     transcoded_file_spec = os.sep.join([
-        recordings_directory, title + timestamp + '.mp4'
+        recordings_directory, "%s-%s.mp4" % (title, timestamp)
     ])
     for charcater in " '" :
         transcoded_file_spec = transcoded_file_spec.replace(charcater, '_')
@@ -275,6 +308,7 @@ while not recording_end :
                                                                 # stop recording
     elif state == 'stopping_recording' :
         end_recording(to_transcode, title)
+        purge_old_recordings()
         seconds_to_wait = 0
         state = 'waiting'
                                                       # wait for sampling period
